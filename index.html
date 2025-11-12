@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>AutoForm AI - Demo</title>
+<style>
+    /* GLOBAL */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #0d0d0d; color: #f0f0f0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+    .container { background: #1a1a1a; padding: 40px; border-radius: 15px; width: 400px; box-shadow: 0 0 20px #00ffff; }
+    
+    h1 { text-align: center; margin-bottom: 20px; color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+    h2 { color: #00d4ff; margin: 20px 0 10px; }
+
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
+    input { background: #2a2a2a; color: #f0f0f0; }
+    input::placeholder { color: #888; }
+    button { background: #00ffff; color: #0d0d0d; cursor: pointer; transition: 0.3s; font-weight: bold; }
+    button:hover { background: #00b8b8; }
+
+    #registerMsg, #loginMsg { margin: 5px 0; font-weight: bold; text-align: center; }
+    #registerMsg { color: #00ff80; }
+    #loginMsg { color: #ff5050; }
+
+    pre { background: #111; padding: 15px; border-radius: 10px; overflow-x: auto; color: #00ffea; max-height: 200px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>AutoForm AI Demo</h1>
+
+    <h2>Registrieren</h2>
+    <input id="regEmail" type="email" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Passwort">
+    <button id="registerBtn">Registrieren</button>
+    <p id="registerMsg"></p>
+
+    <h2>Login</h2>
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Passwort">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg"></p>
+
+    <h2>Profile laden</h2>
+    <button id="loadProfilesBtn">Profile laden</button>
+    <pre id="profiles"></pre>
+</div>
+
+<script>
+const backendUrl = "https://autoform-backend.onrender.com"; // DEIN Render Backend URL
+let token = ""; // Speichert Token nach Login/Registrierung
+
+// Registrierung
+document.getElementById("registerBtn").addEventListener("click", async () => {
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPassword").value;
+
+    try {
+        const res = await fetch(`${backendUrl}/api/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if(res.ok) {
+            token = data.token;
+            document.getElementById("registerMsg").textContent = "Registrierung erfolgreich! Token gesetzt.";
+        } else {
+            document.getElementById("registerMsg").textContent = "Fehler: " + data.error;
+        }
+    } catch (err) {
+        document.getElementById("registerMsg").textContent = "Fehler: Server nicht erreichbar";
+    }
+});
+
+// Login
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const res = await fetch(`${backendUrl}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if(res.ok) {
+            token = data.token;
+            document.getElementById("loginMsg").textContent = "Login erfolgreich! Token gesetzt.";
+        } else {
+            document.getElementById("loginMsg").textContent = "Fehler: " + data.error;
+        }
+    } catch (err) {
+        document.getElementById("loginMsg").textContent = "Fehler: Server nicht erreichbar";
+    }
+});
+
+// Profile laden
+document.getElementById("loadProfilesBtn").addEventListener("click", async () => {
+    try {
+        const res = await fetch(`${backendUrl}/api/profiles`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        document.getElementById("profiles").textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        document.getElementById("profiles").textContent = "Fehler: Server nicht erreichbar";
+    }
+});
+</script>
+</body>
+</html>
