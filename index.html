@@ -2,114 +2,157 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AutoForm AI - Demo</title>
 <style>
-    /* GLOBAL */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #0d0d0d; color: #f0f0f0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-    .container { background: #1a1a1a; padding: 40px; border-radius: 15px; width: 400px; box-shadow: 0 0 20px #00ffff; }
-    
-    h1 { text-align: center; margin-bottom: 20px; color: #00ffff; text-shadow: 0 0 10px #00ffff; }
-    h2 { color: #00d4ff; margin: 20px 0 10px; }
-
-    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
-    input { background: #2a2a2a; color: #f0f0f0; }
-    input::placeholder { color: #888; }
-    button { background: #00ffff; color: #0d0d0d; cursor: pointer; transition: 0.3s; font-weight: bold; }
-    button:hover { background: #00b8b8; }
-
-    #registerMsg, #loginMsg { margin: 5px 0; font-weight: bold; text-align: center; }
-    #registerMsg { color: #00ff80; }
-    #loginMsg { color: #ff5050; }
-
-    pre { background: #111; padding: 15px; border-radius: 10px; overflow-x: auto; color: #00ffea; max-height: 200px; }
+    body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #0d0d1a;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    h1 {
+        margin-top: 30px;
+        color: #0ff;
+        text-shadow: 0 0 10px #0ff;
+    }
+    .container {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 300px;
+    }
+    input {
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        outline: none;
+    }
+    button {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background: #0ff;
+        color: #000;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    button:hover {
+        background: #0aa;
+        color: #fff;
+    }
+    #profileContainer {
+        margin-top: 20px;
+        display: grid;
+        gap: 15px;
+        width: 80%;
+    }
+    .profile-card {
+        background: #1e1e2f;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #0ff;
+    }
 </style>
 </head>
 <body>
-<div class="container">
-    <h1>AutoForm AI Demo</h1>
 
+<h1>AutoForm AI - Demo</h1>
+
+<div class="container">
     <h2>Registrieren</h2>
-    <input id="regEmail" type="email" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Passwort">
+    <input type="email" id="regEmail" placeholder="E-Mail">
+    <input type="password" id="regPassword" placeholder="Passwort">
     <button id="registerBtn">Registrieren</button>
-    <p id="registerMsg"></p>
 
     <h2>Login</h2>
-    <input id="loginEmail" type="email" placeholder="Email">
-    <input id="loginPassword" type="password" placeholder="Passwort">
+    <input type="email" id="loginEmail" placeholder="E-Mail">
+    <input type="password" id="loginPassword" placeholder="Passwort">
     <button id="loginBtn">Login</button>
-    <p id="loginMsg"></p>
 
-    <h2>Profile laden</h2>
     <button id="loadProfilesBtn">Profile laden</button>
-    <pre id="profiles"></pre>
 </div>
 
-<script>
-const backendUrl = "https://autoform-backend.onrender.com"; // DEIN Render Backend URL
-let token = ""; // Speichert Token nach Login/Registrierung
+<div id="profileContainer"></div>
 
-// Registrierung
+<script>
+const backendUrl = "https://autoform-backend.onrender.com"; // dein Render Backend
+let token = "";
+
 document.getElementById("registerBtn").addEventListener("click", async () => {
     const email = document.getElementById("regEmail").value;
     const password = document.getElementById("regPassword").value;
 
-    try {
-        const res = await fetch(`${backendUrl}/api/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+    const res = await fetch(`${backendUrl}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
 
+    if(res.ok) {
         const data = await res.json();
-        if(res.ok) {
-            token = data.token;
-            document.getElementById("registerMsg").textContent = "Registrierung erfolgreich! Token gesetzt.";
-        } else {
-            document.getElementById("registerMsg").textContent = "Fehler: " + data.error;
-        }
-    } catch (err) {
-        document.getElementById("registerMsg").textContent = "Fehler: Server nicht erreichbar";
+        token = data.token;
+        alert("Registrierung erfolgreich! Token gesetzt.");
+    } else {
+        alert("Registrierung fehlgeschlagen!");
     }
 });
 
-// Login
 document.getElementById("loginBtn").addEventListener("click", async () => {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    try {
-        const res = await fetch(`${backendUrl}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+    const res = await fetch(`${backendUrl}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
 
+    if(res.ok) {
         const data = await res.json();
-        if(res.ok) {
-            token = data.token;
-            document.getElementById("loginMsg").textContent = "Login erfolgreich! Token gesetzt.";
-        } else {
-            document.getElementById("loginMsg").textContent = "Fehler: " + data.error;
-        }
-    } catch (err) {
-        document.getElementById("loginMsg").textContent = "Fehler: Server nicht erreichbar";
+        token = data.token;
+        alert("Login erfolgreich! Token gesetzt.");
+    } else {
+        alert("Login fehlgeschlagen!");
     }
 });
 
-// Profile laden
 document.getElementById("loadProfilesBtn").addEventListener("click", async () => {
-    try {
-        const res = await fetch(`${backendUrl}/api/profiles`, {
-            headers: { "Authorization": `Bearer ${token}` }
+    if(!token) {
+        alert("Bitte zuerst einloggen!");
+        return;
+    }
+
+    const res = await fetch(`${backendUrl}/api/profiles`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if(res.ok) {
+        const profiles = await res.json();
+        const container = document.getElementById("profileContainer");
+        container.innerHTML = "";
+
+        profiles.forEach(profile => {
+            const div = document.createElement("div");
+            div.classList.add("profile-card");
+            div.innerHTML = `
+                <h3>${profile.name}</h3>
+                <p>Email: ${profile.email}</p>
+                <p>Telefon: ${profile.phone}</p>
+                <p>Adresse: ${profile.address}</p>
+            `;
+            container.appendChild(div);
         });
-        const data = await res.json();
-        document.getElementById("profiles").textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-        document.getElementById("profiles").textContent = "Fehler: Server nicht erreichbar";
+    } else {
+        alert("Fehler beim Laden der Profile!");
     }
 });
 </script>
+
 </body>
 </html>
