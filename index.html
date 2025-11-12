@@ -2,157 +2,90 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AutoForm AI - Demo</title>
 <style>
-    body {
-        margin: 0;
-        font-family: "Segoe UI", sans-serif;
-        background: #0d0d1a;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    h1 {
-        margin-top: 30px;
-        color: #0ff;
-        text-shadow: 0 0 10px #0ff;
-    }
-    .container {
-        margin-top: 30px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        width: 300px;
-    }
-    input {
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-        outline: none;
-    }
-    button {
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        background: #0ff;
-        color: #000;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-    button:hover {
-        background: #0aa;
-        color: #fff;
-    }
-    #profileContainer {
-        margin-top: 20px;
-        display: grid;
-        gap: 15px;
-        width: 80%;
-    }
-    .profile-card {
-        background: #1e1e2f;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px #0ff;
-    }
+  body { background-color: #111; color: #0ff; font-family: "Arial", sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  .container { background-color: #222; padding: 20px; border-radius: 10px; width: 400px; box-shadow: 0 0 20px #0ff; }
+  input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; }
+  button { width: 100%; padding: 10px; margin-top: 10px; background-color: #0ff; color: #111; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background-color: #0cc; }
+  .profile { background-color: #111; padding: 10px; margin-top: 10px; border-radius: 5px; }
 </style>
 </head>
 <body>
-
-<h1>AutoForm AI - Demo</h1>
-
 <div class="container">
-    <h2>Registrieren</h2>
-    <input type="email" id="regEmail" placeholder="E-Mail">
-    <input type="password" id="regPassword" placeholder="Passwort">
-    <button id="registerBtn">Registrieren</button>
+  <h2>AutoForm AI - Demo</h2>
 
-    <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="E-Mail">
-    <input type="password" id="loginPassword" placeholder="Passwort">
-    <button id="loginBtn">Login</button>
+  <h3>Registrieren</h3>
+  <input id="regName" placeholder="Name">
+  <input id="regEmail" placeholder="Email">
+  <input id="regPassword" type="password" placeholder="Passwort">
+  <button onclick="register()">Registrieren</button>
+  <p id="regMsg"></p>
 
-    <button id="loadProfilesBtn">Profile laden</button>
+  <h3>Login</h3>
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPassword" type="password" placeholder="Passwort">
+  <button onclick="login()">Login</button>
+  <p id="loginMsg"></p>
+
+  <h3>Profile laden</h3>
+  <button onclick="loadProfiles()">Profile laden</button>
+  <div id="profiles"></div>
 </div>
 
-<div id="profileContainer"></div>
-
 <script>
-const backendUrl = "https://autoform-backend.onrender.com"; // dein Render Backend
-let token = "";
+const backendUrl = "http://localhost:4000"; // Bei Render: z.B. https://dein-backend.onrender.com
+let token = null;
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
-    const email = document.getElementById("regEmail").value;
-    const password = document.getElementById("regPassword").value;
+function register() {
+  const name = document.getElementById("regName").value;
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
 
-    const res = await fetch(`${backendUrl}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+  fetch(`${backendUrl}/api/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password })
+  }).then(res => res.json())
+    .then(data => {
+      if (data.token) token = data.token;
+      document.getElementById("regMsg").innerText = data.message || data.error;
     });
+}
 
-    if(res.ok) {
-        const data = await res.json();
-        token = data.token;
-        alert("Registrierung erfolgreich! Token gesetzt.");
-    } else {
-        alert("Registrierung fehlgeschlagen!");
-    }
-});
+function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
-
-    const res = await fetch(`${backendUrl}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+  fetch(`${backendUrl}/api/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  }).then(res => res.json())
+    .then(data => {
+      if (data.token) token = data.token;
+      document.getElementById("loginMsg").innerText = data.message || data.error;
     });
+}
 
-    if(res.ok) {
-        const data = await res.json();
-        token = data.token;
-        alert("Login erfolgreich! Token gesetzt.");
-    } else {
-        alert("Login fehlgeschlagen!");
-    }
-});
+function loadProfiles() {
+  if (!token) { alert("Bitte zuerst einloggen!"); return; }
 
-document.getElementById("loadProfilesBtn").addEventListener("click", async () => {
-    if(!token) {
-        alert("Bitte zuerst einloggen!");
-        return;
-    }
-
-    const res = await fetch(`${backendUrl}/api/profiles`, {
-        headers: { "Authorization": `Bearer ${token}` }
+  fetch(`${backendUrl}/api/profiles`, {
+    headers: { "Authorization": "Bearer " + token }
+  }).then(res => res.json())
+    .then(profiles => {
+      const container = document.getElementById("profiles");
+      container.innerHTML = "";
+      profiles.forEach(p => {
+        container.innerHTML += `<div class="profile">
+          <strong>${p.name}</strong><br>
+          Email: ${p.email}
+        </div>`;
+      });
     });
-
-    if(res.ok) {
-        const profiles = await res.json();
-        const container = document.getElementById("profileContainer");
-        container.innerHTML = "";
-
-        profiles.forEach(profile => {
-            const div = document.createElement("div");
-            div.classList.add("profile-card");
-            div.innerHTML = `
-                <h3>${profile.name}</h3>
-                <p>Email: ${profile.email}</p>
-                <p>Telefon: ${profile.phone}</p>
-                <p>Adresse: ${profile.address}</p>
-            `;
-            container.appendChild(div);
-        });
-    } else {
-        alert("Fehler beim Laden der Profile!");
-    }
-});
+}
 </script>
-
 </body>
 </html>
